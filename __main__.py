@@ -1,4 +1,5 @@
-from bitdeli import Profiles, set_theme
+from bitdeli import Profiles, set_theme, Title, Description
+from bitdeli.textutil import Percent
 from itertools import chain, groupby
 from datetime import datetime
 import time
@@ -7,6 +8,8 @@ WINDOW = 72 #hours
 NUM_WEEKS = 4
 ACTIVE_LIMIT = 2 # hours
 TARGET_HOURS = 10
+
+text = {}
 
 set_theme('purple')
 
@@ -35,12 +38,13 @@ def newest_active(active_profiles):
                                                           reverse=True):
             if newest_profile == None:
                 newest_profile = first_hour
-            if newest_profile - first_hour > 72:
+            if newest_profile - first_hour > WINDOW:
                 break
             yield {' id': uid,
                    'first event': format(now, first_hour),
                    'last event': format(now, last_hour)}
     data = list(window())
+    text['num_active'] = len(data)
     yield {'type': 'table',
            'label': 'newest active users (%d)' % len(data),
            'size': (12, 5),
@@ -62,11 +66,15 @@ def progress(active_profiles):
         for week, successes in groupby(weeks(), lambda x: x[0]):
             total = num_success = 0
             data = list(successes)
-            score = sum(1 for day, success in data if success) / float(len(data))
-            yield 'week %d' % week, score * 100
-
+            num_success = sum(1 for day, success in data if success)
+            ratio = num_success / float(len(data))
+            if 'num_converted' not in text:
+                text['num_converted'] = num_success
+                text['conversion'] = Percent(ratio)
+            yield 'week %d' % week, ratio * 100
+            
     yield {'type': 'bar',
-           'color': 2,
+           'color': 3,
            'label': '% of users converted',
            'data': list(reversed(list(weekly_scores()))),
            'size': (12, 3)}
@@ -74,3 +82,8 @@ def progress(active_profiles):
 Profiles().map(active_users).map(newest_active).show()
 Profiles().map(active_users).map(progress).show()
 
+Title('{num_active} new users are waiting to be converted!', text)
+
+Description("""
+Already {num_converted} users have become active this week. Our conversion percent is currently {conversion}.
+""", text)
