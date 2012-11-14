@@ -1,4 +1,4 @@
-from bitdeli import Profiles, set_text, set_theme, get_themes
+from bitdeli import Profiles, set_theme
 from itertools import chain, groupby
 from datetime import datetime
 import time
@@ -8,7 +8,7 @@ NUM_WEEKS = 4
 ACTIVE_LIMIT = 2 # hours
 TARGET_HOURS = 10
 
-set_theme('vintage')
+set_theme('purple')
 
 def is_success(active_hours):
     return len(active_hours) > TARGET_HOURS
